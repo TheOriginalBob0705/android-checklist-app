@@ -131,6 +131,7 @@ fun ChecklistDetailScreen(
         TextFieldDialog(
             title = "Rename heading",
             label = "Title",
+            initialText = targetSection.title,
             onConfirm = { text ->
                 vm.renameSection(targetSection, text)
                 editSection = null
@@ -144,6 +145,7 @@ fun ChecklistDetailScreen(
         TextFieldDialog(
             title = "Edit entry",
             label = "Text",
+            initialText = targetEntry.text,
             onConfirm = { text ->
                 vm.renameEntry(targetEntry, text)
                 editEntry = null
@@ -157,6 +159,7 @@ fun ChecklistDetailScreen(
         TextFieldDialog(
             title = "Rename checklist",
             label = "Name",
+            initialText = targetChecklist.name,
             onConfirm = { text ->
                 vm.renameChecklist(targetChecklist, text)
                 editChecklist = null

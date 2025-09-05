@@ -77,6 +77,7 @@ fun ChecklistListScreen(
         TextFieldDialog(
             title = "Rename checklist",
             label = "Name",
+            initialText = editCandidate.name,
             onConfirm = { text ->
                 vm.renameChecklist(editCandidate, text)
                 editChecklist = null
