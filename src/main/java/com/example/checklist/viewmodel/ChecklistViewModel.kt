@@ -23,4 +23,16 @@ class ChecklistViewModel(private val repo: Repository) : ViewModel() {
         viewModelScope.launch { repo.deleteChecklist(id) }
     }
     fun deleteEntry(id: Long) { viewModelScope.launch { repo.deleteEntry(id) } }
+
+    fun renameChecklist(entity: ChecklistEntity, newName: String) {
+        viewModelScope.launch { repo.updateChecklist(entity.copy(name = newName)) }
+    }
+
+    fun renameSection(section: SectionEntity, newTitle: String) {
+        viewModelScope.launch { repo.updateSection(section.copy(title = newTitle)) }
+    }
+
+    fun renameEntry(entry: EntryEntity, newText: String) {
+        viewModelScope.launch { repo.updateEntry(entry.copy(text = newText)) }
+    }
 }

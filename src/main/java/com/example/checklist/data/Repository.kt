@@ -9,10 +9,6 @@ class Repository(private val db: AppDatabase) {
 
     suspend fun addChecklist(name: String): Long = db.checklistDao().insert(ChecklistEntity(name = name))
 
-    suspend fun renameChecklist(id: Long, name: String) {
-        db.checklistDao().update(ChecklistEntity(id = id, name = name))
-    }
-
     suspend fun deleteChecklist(id: Long) {
         db.checklistDao().delete(ChecklistEntity(id = id, name = ""))
     }
@@ -29,5 +25,17 @@ class Repository(private val db: AppDatabase) {
 
     suspend fun deleteEntry(id: Long) {
         db.entryDao().delete(EntryEntity(id = id, checklistId = 0, text = "", orderIndex = 0))
+    }
+
+    suspend fun updateChecklist(checklist: ChecklistEntity) {
+        db.checklistDao().update(checklist)
+    }
+
+    suspend fun updateSection(section: SectionEntity) {
+        db.sectionDao().update(section)
+    }
+
+    suspend fun updateEntry(entry: EntryEntity) {
+        db.entryDao().update(entry)
     }
 }

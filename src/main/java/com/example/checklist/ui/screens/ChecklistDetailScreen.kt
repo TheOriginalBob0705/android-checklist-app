@@ -1,5 +1,6 @@
 package com.example.checklist.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import com.example.checklist.data.*
 import com.example.checklist.ui.screens.components.SectionHeader
 import com.example.checklist.ui.screens.components.TextFieldDialog
@@ -23,12 +25,24 @@ fun ChecklistDetailScreen(
 
     var showAddSection by remember { mutableStateOf(false) }
     var showAddUngrouped by remember { mutableStateOf(false) }
-    var addForSectionId by remember { mutableStateOf<Long?>(null) } // <-- new
+    var addForSectionId by remember { mutableStateOf<Long?>(null) }
+
+    var editSection by remember { mutableStateOf<SectionEntity?>(null) }
+    var editEntry by remember { mutableStateOf<EntryEntity?>(null) }
+
+    var editChecklist by remember { mutableStateOf<ChecklistEntity?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(full?.checklist?.name ?: "") },
+                title = {
+                    Text(
+                        full?.checklist?.name ?: "",
+                        modifier = Modifier.clickable {
+                            full?.checklist?.let { editChecklist = it }
+                        }
+                    )
+                },
                 navigationIcon = { IconButton(onClick = onBack) { Text("←") } }
             )
         },
@@ -48,15 +62,20 @@ fun ChecklistDetailScreen(
                 if (data.ungrouped.isNotEmpty()) {
                     item { SectionHeader("Ungrouped") }
                     items(data.ungrouped.sortedBy { it.orderIndex }, key = { it.id }) { entry ->
-                        EntryRow(entry, vm)
+                        EntryRow(entry, vm, onEdit = { editEntry = it })
                     }
                 }
 
                 val sections = data.sections.sortedBy { it.section.orderIndex }
                 sections.forEach { sw ->
-                    item { SectionHeader(sw.section.title) }
+                    item {
+                        SectionHeader(
+                        sw.section.title,
+                            onClick = { editSection = sw.section }
+                        )
+                    }
                     items(sw.entries.sortedBy { it.orderIndex }, key = { it.id }) { entry ->
-                        EntryRow(entry, vm)
+                        EntryRow(entry, vm, onEdit = { editEntry = it })
                     }
                     item { Spacer(Modifier.height(8.dp)) }
                     item {
@@ -106,13 +125,67 @@ fun ChecklistDetailScreen(
             onDismiss = { addForSectionId = null }
         )
     }
+
+    val targetSection = editSection
+    if (targetSection != null) {
+        TextFieldDialog(
+            title = "Rename heading",
+            label = "Title",
+            onConfirm = { text ->
+                vm.renameSection(targetSection, text)
+                editSection = null
+            },
+            onDismiss = { editSection = null }
+        )
+    }
+
+    val targetEntry = editEntry
+    if (targetEntry != null) {
+        TextFieldDialog(
+            title = "Edit entry",
+            label = "Text",
+            onConfirm = { text ->
+                vm.renameEntry(targetEntry, text)
+                editEntry = null
+            },
+            onDismiss = { editEntry = null }
+        )
+    }
+
+    val targetChecklist = editChecklist
+    if (targetChecklist != null) {
+        TextFieldDialog(
+            title = "Rename checklist",
+            label = "Name",
+            onConfirm = { text ->
+                vm.renameChecklist(targetChecklist, text)
+                editChecklist = null
+            },
+            onDismiss = { editChecklist = null }
+        )
+    }
 }
 
 @Composable
-private fun EntryRow(entry: EntryEntity, vm: ChecklistViewModel) {
+fun SectionHeader(title: String, onClick: () -> Unit = {}) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { onClick() }
+    )
+    HorizontalDivider()
+    Spacer(Modifier.height(8.dp))
+}
+
+@Composable
+private fun EntryRow(entry: EntryEntity, vm: ChecklistViewModel, onEdit: (EntryEntity) -> Unit) {
     ListItem(
         leadingContent = { Checkbox(checked = entry.checked, onCheckedChange = { vm.toggle(entry) }) },
-        headlineContent = { Text(entry.text) },
+        headlineContent = { Text(entry.text, modifier = Modifier.clickable { onEdit(entry) }) },
         trailingContent = { TextButton(onClick = { vm.deleteEntry(entry.id) }) { Text("Delete") } }
     )
     HorizontalDivider()

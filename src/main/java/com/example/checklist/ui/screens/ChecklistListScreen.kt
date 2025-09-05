@@ -1,5 +1,6 @@
 package com.example.checklist.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,8 @@ fun ChecklistListScreen(
     var showDialog by remember { mutableStateOf(false) }
     var deleteTarget by remember {mutableStateOf<ChecklistEntity?>(null) }
 
+    var editChecklist by remember { mutableStateOf<ChecklistEntity?>(null) }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Checklists") }) },
         floatingActionButton = {
@@ -35,7 +38,8 @@ fun ChecklistListScreen(
                 ChecklistRow(
                     item = item,
                     onOpen = onOpen,
-                    onDeleteRequest = { deleteTarget = item }
+                    onDeleteRequest = { deleteTarget = item },
+                    onEditRequest = { editChecklist = item }
                 )
             }
         }
@@ -50,21 +54,34 @@ fun ChecklistListScreen(
         )
     }
 
-    val target = deleteTarget
-    if (target != null) {
+    val deleteCandidate = deleteTarget
+    if (deleteCandidate != null) {
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
             title = { Text("Delete checklist") },
-            text = { Text("Are you sure you want to delete \"${target.name}\"? This action cannot be undone.") },
+            text = { Text("Are you sure you want to delete \"${deleteCandidate.name}\"? This action cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.deleteChecklist(target.id)
+                    vm.deleteChecklist(deleteCandidate.id)
                     deleteTarget = null
                 }) { Text("Delete") }
             },
             dismissButton = {
                 TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
             }
+        )
+    }
+
+    val editCandidate = editChecklist
+    if (editCandidate != null) {
+        TextFieldDialog(
+            title = "Rename checklist",
+            label = "Name",
+            onConfirm = { text ->
+                vm.renameChecklist(editCandidate, text)
+                editChecklist = null
+            },
+            onDismiss = { editChecklist = null }
         )
     }
 }
@@ -74,9 +91,15 @@ fun ChecklistListScreen(
 private fun ChecklistRow(
     item: ChecklistEntity,
     onOpen: (Long) -> Unit,
-    onDeleteRequest: () -> Unit) {
+    onDeleteRequest: () -> Unit,
+    onEditRequest: () -> Unit) {
     ListItem(
-        headlineContent = { Text(item.name) },
+        headlineContent = {
+            Text(
+                item.name,
+                modifier = Modifier.clickable { onEditRequest() }
+            )
+        },
         supportingContent = {
             val createdText = DateFormat.getDateInstance().format(Date(item.createdAt))
             Text("Created • $createdText") },
