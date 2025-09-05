@@ -1,7 +1,6 @@
 package com.example.checklist.data
 
 import androidx.room.*
-import kotlinx.coroutines.flow.*
 
 @Entity(tableName = "checklists")
 data class ChecklistEntity(

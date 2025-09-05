@@ -1,6 +1,7 @@
 package com.example.checklist.ui.screens
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +22,7 @@ fun ChecklistListScreen(
 ) {
     val lists by vm.checklists.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
+    var deleteTarget by remember {mutableStateOf<ChecklistEntity?>(null) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Checklists") }) },
@@ -29,7 +31,13 @@ fun ChecklistListScreen(
         }
     ) { padding ->
         LazyColumn(contentPadding = padding) {
-            items(lists, key = { it.id }) { item -> ChecklistRow(item, onOpen) }
+            items(lists, key = { it.id }) { item ->
+                ChecklistRow(
+                    item = item,
+                    onOpen = onOpen,
+                    onDeleteRequest = { deleteTarget = item }
+                )
+            }
         }
     }
 
@@ -41,19 +49,43 @@ fun ChecklistListScreen(
             onDismiss = { showDialog = false }
         )
     }
+
+    val target = deleteTarget
+    if (target != null) {
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("Delete checklist") },
+            text = { Text("Are you sure you want to delete \"${target.name}\"? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.deleteChecklist(target.id)
+                    deleteTarget = null
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ChecklistRow(item: ChecklistEntity, onOpen: (Long) -> Unit) {
-    val createdText = remember(item.createdAt) {
-        DateFormat.getDateInstance().format(Date(item.createdAt))
-    }
+private fun ChecklistRow(
+    item: ChecklistEntity,
+    onOpen: (Long) -> Unit,
+    onDeleteRequest: () -> Unit) {
     ListItem(
         headlineContent = { Text(item.name) },
-        supportingContent = { Text("Created • $createdText") },
+        supportingContent = {
+            val createdText = DateFormat.getDateInstance().format(Date(item.createdAt))
+            Text("Created • $createdText") },
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpen(item.id) }
+            .combinedClickable(
+                onClick = { onOpen(item.id) },
+                onLongClick = { onDeleteRequest() }
+            )
     )
     HorizontalDivider()
 }

@@ -19,5 +19,8 @@ class ChecklistViewModel(private val repo: Repository) : ViewModel() {
 
     fun toggle(entry: EntryEntity) { viewModelScope.launch { repo.toggleEntry(entry.id, !entry.checked, entry.checklistId, entry.sectionId, entry.text, entry.orderIndex) } }
 
+    fun deleteChecklist(id: Long) {
+        viewModelScope.launch { repo.deleteChecklist(id) }
+    }
     fun deleteEntry(id: Long) { viewModelScope.launch { repo.deleteEntry(id) } }
 }
