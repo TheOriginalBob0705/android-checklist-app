@@ -28,4 +28,25 @@
     <string name="action_delete">Delete</string>
     <string name="action_add">+</string>
     <string name="action_back">←</string>
+
+    <string name="delete_heading">Delete heading</string>
+    <string name="delete_heading_confirm">Delete \"%1$s\" and everything under it? This cannot be undone.</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="rename">Rename</string>
+    <string name="heading_options">Options for %1$s</string>
+
+    <string name="entry_deleted">Deleted \"%1$s\"</string>
+    <string name="action_undo">Undo</string>
+    <string name="drag_handle">Reorder %1$s</string>
+    <string name="toggle_entry">%1$s</string>
+
+    <string name="empty_checklists_title">No checklists yet</string>
+    <string name="empty_checklists_body">Tap + to create your first one.</string>
+    <string name="empty_entries_title">Nothing here yet</string>
+    <string name="empty_entries_body">Add a heading to group things, or add an entry on its own.</string>
+
+    <string name="progress_count">%1$d of %2$d done</string>
+    <string name="add_checklist">Add checklist</string>
+    <string name="back">Back</string>
 </resources>
