@@ -19,8 +19,8 @@ class Repository(private val db: AppDatabase) {
     suspend fun addEntry(checklistId: Long, sectionId: Long?, text: String, orderIndex: Int) : Long =
         db.entryDao().insert(EntryEntity(checklistId = checklistId, sectionId = sectionId, text = text, orderIndex = orderIndex))
 
-    suspend fun toggleEntry(id: Long, checked: Boolean, checklistId: Long, sectionId: Long?, text: String, order: Int) {
-        db.entryDao().update(EntryEntity(id = id, checklistId = checklistId, sectionId = sectionId, text = text, checked = checked, orderIndex = order))
+    suspend fun setEntryChecked(id: Long, checked: Boolean) {
+        db.entryDao().setChecked(id, checked)
     }
 
     suspend fun deleteEntry(id: Long) {

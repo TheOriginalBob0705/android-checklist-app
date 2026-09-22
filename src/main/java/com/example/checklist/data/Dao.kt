@@ -42,6 +42,10 @@ interface EntryDao {
     @Insert
     suspend fun insert(entry: EntryEntity): Long
 
+    // Targeted write so a toggle can't clobber a concurrent text edit.
+    @Query("UPDATE entries SET checked = :checked WHERE id = :id")
+    suspend fun setChecked(id: Long, checked: Boolean)
+
     @Update
     suspend fun update(entry: EntryEntity)
 
