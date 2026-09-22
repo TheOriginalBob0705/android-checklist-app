@@ -5,6 +5,10 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 android {
     namespace = "com.example.checklist"
     compileSdk = 36
@@ -18,6 +22,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    // Lets MigrationTestHelper read the exported schemas at runtime.
+    sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
 
     buildTypes {
         release {
@@ -63,6 +70,9 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
+    androidTestImplementation("androidx.room:room-testing:$roomVersion")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
     val nav_version = "2.9.3"
     implementation("androidx.navigation:navigation-compose:${nav_version}")

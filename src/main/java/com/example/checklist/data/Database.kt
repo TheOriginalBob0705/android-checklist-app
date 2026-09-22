@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [ChecklistEntity::class, SectionEntity::class, EntryEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun checklistDao(): ChecklistDao
@@ -23,7 +23,8 @@ abstract class AppDatabase : RoomDatabase() {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "checklist.db"
-            ).build().also { INSTANCE = it }
+            ).addMigrations(*ALL_MIGRATIONS)
+                .build().also { INSTANCE = it }
         }
     }
 }
