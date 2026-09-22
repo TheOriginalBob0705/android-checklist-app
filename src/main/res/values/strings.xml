@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">Checklist</string>
+
+    <string name="checklists_title">Checklists</string>
+    <string name="created_on">Created • %1$s</string>
+    <string name="ungrouped">Ungrouped</string>
+
+    <string name="new_checklist">New checklist</string>
+    <string name="rename_checklist">Rename checklist</string>
+    <string name="delete_checklist">Delete checklist</string>
+    <string name="delete_checklist_confirm">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
+
+    <string name="new_heading">New heading</string>
+    <string name="rename_heading">Rename heading</string>
+    <string name="add_heading">Add heading</string>
+
+    <string name="new_entry">New entry</string>
+    <string name="edit_entry">Edit entry</string>
+    <string name="add_entry">Add entry</string>
+    <string name="add_entry_in_section">Add entry in \"%1$s\"</string>
+
+    <string name="label_name">Name</string>
+    <string name="label_title">Title</string>
+    <string name="label_text">Text</string>
+
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_add">+</string>
+    <string name="action_back">←</string>
 </resources>

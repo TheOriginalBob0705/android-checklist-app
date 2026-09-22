@@ -7,8 +7,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontWeight
+import com.example.checklist.R
 import com.example.checklist.data.*
 import com.example.checklist.ui.screens.components.SectionHeader
 import com.example.checklist.ui.screens.components.TextFieldDialog
@@ -48,14 +49,14 @@ fun ChecklistDetailScreen(
                         }
                     )
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Text("←") } }
+                navigationIcon = { IconButton(onClick = onBack) { Text(stringResource(R.string.action_back)) } }
             )
         },
         bottomBar = {
             BottomAppBar(actions = {
-                TextButton(onClick = { showAddSection = true }) { Text("Add heading") }
+                TextButton(onClick = { showAddSection = true }) { Text(stringResource(R.string.add_heading)) }
                 Spacer(Modifier.width(8.dp))
-                TextButton(onClick = { showAddUngrouped = true }) { Text("Add entry") }
+                TextButton(onClick = { showAddUngrouped = true }) { Text(stringResource(R.string.add_entry)) }
             })
         }
     ) { padding ->
@@ -65,7 +66,7 @@ fun ChecklistDetailScreen(
                 modifier = Modifier.fillMaxSize().padding(16.dp)
             ) {
                 if (data.ungrouped.isNotEmpty()) {
-                    item(key = "header-ungrouped") { SectionHeader("Ungrouped") }
+                    item(key = "header-ungrouped") { SectionHeader(stringResource(R.string.ungrouped)) }
                     items(data.ungrouped, key = { it.id }) { entry ->
                         EntryRow(entry, onToggleEntry, onEditEntry, onDeleteEntry)
                     }
@@ -84,7 +85,7 @@ fun ChecklistDetailScreen(
                     item(key = "add-${group.section.id}") {
                         Spacer(Modifier.height(8.dp))
                         TextButton(onClick = { addForSectionId = group.section.id }) {
-                            Text("Add entry in \"${group.section.title}\"")
+                            Text(stringResource(R.string.add_entry_in_section, group.section.title))
                         }
                     }
                 }
@@ -97,8 +98,8 @@ fun ChecklistDetailScreen(
     if (showAddSection) {
         val order = (detail?.sections?.maxOfOrNull { it.section.orderIndex } ?: -1) + 1
         TextFieldDialog(
-            title = "New heading",
-            label = "Title",
+            title = stringResource(R.string.new_heading),
+            label = stringResource(R.string.label_title),
             onConfirm = { title -> vm.addSection(id, title, order); showAddSection = false },
             onDismiss = { showAddSection = false }
         )
@@ -107,8 +108,8 @@ fun ChecklistDetailScreen(
     if (showAddUngrouped) {
         val order = (detail?.ungrouped?.maxOfOrNull { it.orderIndex } ?: -1) + 1
         TextFieldDialog(
-            title = "New entry",
-            label = "Text",
+            title = stringResource(R.string.new_entry),
+            label = stringResource(R.string.label_text),
             onConfirm = { text -> vm.addEntry(id, null, text, order); showAddUngrouped = false },
             onDismiss = { showAddUngrouped = false }
         )
@@ -121,8 +122,8 @@ fun ChecklistDetailScreen(
         val group = currentDetail.sections.firstOrNull { it.section.id == targetSectionId }
         val nextOrder = ((group?.entries?.maxOfOrNull { it.orderIndex }) ?: -1) + 1
         TextFieldDialog(
-            title = "New entry",
-            label = "Text",
+            title = stringResource(R.string.new_entry),
+            label = stringResource(R.string.label_text),
             onConfirm = { text ->
                 vm.addEntry(id, targetSectionId, text, nextOrder)
                 addForSectionId = null
@@ -134,8 +135,8 @@ fun ChecklistDetailScreen(
     val targetSection = editSection
     if (targetSection != null) {
         TextFieldDialog(
-            title = "Rename heading",
-            label = "Title",
+            title = stringResource(R.string.rename_heading),
+            label = stringResource(R.string.label_title),
             initialText = targetSection.title,
             onConfirm = { text ->
                 vm.renameSection(targetSection, text)
@@ -148,8 +149,8 @@ fun ChecklistDetailScreen(
     val targetEntry = editEntry
     if (targetEntry != null) {
         TextFieldDialog(
-            title = "Edit entry",
-            label = "Text",
+            title = stringResource(R.string.edit_entry),
+            label = stringResource(R.string.label_text),
             initialText = targetEntry.text,
             onConfirm = { text ->
                 vm.renameEntry(targetEntry, text)
@@ -162,8 +163,8 @@ fun ChecklistDetailScreen(
     val targetChecklist = editChecklist
     if (targetChecklist != null) {
         TextFieldDialog(
-            title = "Rename checklist",
-            label = "Name",
+            title = stringResource(R.string.rename_checklist),
+            label = stringResource(R.string.label_name),
             initialText = targetChecklist.name,
             onConfirm = { text ->
                 vm.renameChecklist(targetChecklist, text)
@@ -172,21 +173,6 @@ fun ChecklistDetailScreen(
             onDismiss = { editChecklist = null }
         )
     }
-}
-
-@Composable
-fun SectionHeader(title: String, onClick: () -> Unit = {}) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { onClick() }
-    )
-    HorizontalDivider()
-    Spacer(Modifier.height(8.dp))
 }
 
 @Composable
@@ -199,7 +185,7 @@ private fun EntryRow(
     ListItem(
         leadingContent = { Checkbox(checked = entry.checked, onCheckedChange = { onToggle(entry) }) },
         headlineContent = { Text(entry.text, modifier = Modifier.clickable { onEdit(entry) }) },
-        trailingContent = { TextButton(onClick = { onDelete(entry) }) { Text("Delete") } }
+        trailingContent = { TextButton(onClick = { onDelete(entry) }) { Text(stringResource(R.string.action_delete)) } }
     )
     HorizontalDivider()
 }

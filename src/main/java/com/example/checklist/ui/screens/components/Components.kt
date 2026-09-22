@@ -1,5 +1,6 @@
 package com.example.checklist.ui.screens.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +14,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.res.stringResource
+import com.example.checklist.R
 import kotlinx.coroutines.delay
 
 @Composable
@@ -61,19 +64,20 @@ fun TextFieldDialog(
                 )
             )
         },
-        confirmButton = { TextButton(onClick = { if (fieldValue.text.isNotBlank()) onConfirm(fieldValue.text) }) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        confirmButton = { TextButton(onClick = { if (fieldValue.text.isNotBlank()) onConfirm(fieldValue.text) }) { Text(stringResource(R.string.action_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
 @Composable
-fun SectionHeader(title: String) {
+fun SectionHeader(title: String, onClick: (() -> Unit)? = null) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier
             .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 8.dp)
     )
     HorizontalDivider()

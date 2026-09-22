@@ -3,28 +3,28 @@ package com.example.checklist.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.*
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.material3.Surface
 import com.example.checklist.App
-import com.example.checklist.data.Repository
+import com.example.checklist.ui.theme.ChecklistTheme
 import com.example.checklist.viewmodel.ChecklistViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: ChecklistViewModel by viewModels {
+        ChecklistViewModel.factory((application as App).db)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // targetSdk 36 is edge-to-edge regardless; this keeps the system bar icons legible in both themes.
+        enableEdgeToEdge()
 
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme()) {
-                val app = application as App
-                val factory = object : ViewModelProvider.Factory {
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        @Suppress("UNCHECKED_CAST")
-                        return ChecklistViewModel(Repository(app.db)) as T
-                    }
-                }
+            ChecklistTheme {
                 Surface {
-                    ChecklistNav(factory = factory)
+                    ChecklistNav(vm = viewModel)
                 }
             }
         }
