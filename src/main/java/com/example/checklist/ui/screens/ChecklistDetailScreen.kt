@@ -21,7 +21,7 @@ fun ChecklistDetailScreen(
     onBack: () -> Unit,
     vm: ChecklistViewModel
 ) {
-    val full by vm.checklistFull(id).collectAsState(initial = null)
+    val detail by remember(vm, id) { vm.checklistDetail(id) }.collectAsState()
 
     var showAddSection by remember { mutableStateOf(false) }
     var showAddUngrouped by remember { mutableStateOf(false) }
@@ -32,14 +32,19 @@ fun ChecklistDetailScreen(
 
     var editChecklist by remember { mutableStateOf<ChecklistEntity?>(null) }
 
+    // Stable instances so rows can skip recomposition.
+    val onToggleEntry = remember(vm) { { entry: EntryEntity -> vm.toggle(entry) } }
+    val onDeleteEntry = remember(vm) { { entry: EntryEntity -> vm.deleteEntry(entry.id) } }
+    val onEditEntry = remember { { entry: EntryEntity -> editEntry = entry } }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        full?.checklist?.name ?: "",
+                        detail?.checklist?.name ?: "",
                         modifier = Modifier.clickable {
-                            full?.checklist?.let { editChecklist = it }
+                            detail?.checklist?.let { editChecklist = it }
                         }
                     )
                 },
@@ -54,44 +59,43 @@ fun ChecklistDetailScreen(
             })
         }
     ) { padding ->
-        full?.let { data ->
+        detail?.let { data ->
             LazyColumn(
                 contentPadding = padding,
                 modifier = Modifier.fillMaxSize().padding(16.dp)
             ) {
                 if (data.ungrouped.isNotEmpty()) {
-                    item { SectionHeader("Ungrouped") }
-                    items(data.ungrouped.sortedBy { it.orderIndex }, key = { it.id }) { entry ->
-                        EntryRow(entry, vm, onEdit = { editEntry = it })
+                    item(key = "header-ungrouped") { SectionHeader("Ungrouped") }
+                    items(data.ungrouped, key = { it.id }) { entry ->
+                        EntryRow(entry, onToggleEntry, onEditEntry, onDeleteEntry)
                     }
                 }
 
-                val sections = data.sections.sortedBy { it.section.orderIndex }
-                sections.forEach { sw ->
-                    item {
+                data.sections.forEach { group ->
+                    item(key = "header-${group.section.id}") {
                         SectionHeader(
-                        sw.section.title,
-                            onClick = { editSection = sw.section }
+                            group.section.title,
+                            onClick = { editSection = group.section }
                         )
                     }
-                    items(sw.entries.sortedBy { it.orderIndex }, key = { it.id }) { entry ->
-                        EntryRow(entry, vm, onEdit = { editEntry = it })
+                    items(group.entries, key = { it.id }) { entry ->
+                        EntryRow(entry, onToggleEntry, onEditEntry, onDeleteEntry)
                     }
-                    item { Spacer(Modifier.height(8.dp)) }
-                    item {
-                        TextButton(onClick = { addForSectionId = sw.section.id }) {
-                            Text("Add entry in \"${sw.section.title}\"")
+                    item(key = "add-${group.section.id}") {
+                        Spacer(Modifier.height(8.dp))
+                        TextButton(onClick = { addForSectionId = group.section.id }) {
+                            Text("Add entry in \"${group.section.title}\"")
                         }
                     }
                 }
 
-                item { Spacer(Modifier.height(88.dp)) }
+                item(key = "bottom-spacer") { Spacer(Modifier.height(88.dp)) }
             }
         }
     }
 
     if (showAddSection) {
-        val order = (full?.sections?.maxOfOrNull { it.section.orderIndex } ?: -1) + 1
+        val order = (detail?.sections?.maxOfOrNull { it.section.orderIndex } ?: -1) + 1
         TextFieldDialog(
             title = "New heading",
             label = "Title",
@@ -101,7 +105,7 @@ fun ChecklistDetailScreen(
     }
 
     if (showAddUngrouped) {
-        val order = (full?.ungrouped?.maxOfOrNull { it.orderIndex } ?: -1) + 1
+        val order = (detail?.ungrouped?.maxOfOrNull { it.orderIndex } ?: -1) + 1
         TextFieldDialog(
             title = "New entry",
             label = "Text",
@@ -112,9 +116,10 @@ fun ChecklistDetailScreen(
 
     // Inline dialog for adding inside a section
     val targetSectionId = addForSectionId
-    if (targetSectionId != null && full != null) {
-        val sw = full!!.sections.firstOrNull { it.section.id == targetSectionId }
-        val nextOrder = ((sw?.entries?.maxOfOrNull { it.orderIndex }) ?: -1) + 1
+    val currentDetail = detail
+    if (targetSectionId != null && currentDetail != null) {
+        val group = currentDetail.sections.firstOrNull { it.section.id == targetSectionId }
+        val nextOrder = ((group?.entries?.maxOfOrNull { it.orderIndex }) ?: -1) + 1
         TextFieldDialog(
             title = "New entry",
             label = "Text",
@@ -185,11 +190,16 @@ fun SectionHeader(title: String, onClick: () -> Unit = {}) {
 }
 
 @Composable
-private fun EntryRow(entry: EntryEntity, vm: ChecklistViewModel, onEdit: (EntryEntity) -> Unit) {
+private fun EntryRow(
+    entry: EntryEntity,
+    onToggle: (EntryEntity) -> Unit,
+    onEdit: (EntryEntity) -> Unit,
+    onDelete: (EntryEntity) -> Unit
+) {
     ListItem(
-        leadingContent = { Checkbox(checked = entry.checked, onCheckedChange = { vm.toggle(entry) }) },
+        leadingContent = { Checkbox(checked = entry.checked, onCheckedChange = { onToggle(entry) }) },
         headlineContent = { Text(entry.text, modifier = Modifier.clickable { onEdit(entry) }) },
-        trailingContent = { TextButton(onClick = { vm.deleteEntry(entry.id) }) { Text("Delete") } }
+        trailingContent = { TextButton(onClick = { onDelete(entry) }) { Text("Delete") } }
     )
     HorizontalDivider()
 }

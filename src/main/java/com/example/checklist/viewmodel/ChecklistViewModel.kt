@@ -1,15 +1,50 @@
 package com.example.checklist.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.checklist.data.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+
+@Immutable
+data class SectionGroup(
+    val section: SectionEntity,
+    val entries: List<EntryEntity>
+)
+
+@Immutable
+data class ChecklistDetail(
+    val checklist: ChecklistEntity,
+    val ungrouped: List<EntryEntity>,
+    val sections: List<SectionGroup>
+)
+
+internal fun ChecklistFull.toDetail(): ChecklistDetail {
+    val bySection = entries.groupBy { it.sectionId }
+    fun ordered(list: List<EntryEntity>?) = list.orEmpty().sortedBy { it.orderIndex }
+    return ChecklistDetail(
+        checklist = checklist,
+        ungrouped = ordered(bySection[null]),
+        sections = sections
+            .sortedBy { it.orderIndex }
+            .map { section -> SectionGroup(section, ordered(bySection[section.id])) }
+    )
+}
 
 class ChecklistViewModel(private val repo: Repository) : ViewModel() {
     val checklists = repo.checklists.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    fun checklistFull(id: Long) = repo.checklistFull(id)
+    private val details = mutableMapOf<Long, StateFlow<ChecklistDetail?>>()
+
+    // Cached per id so recomposition reuses the subscription instead of restarting the query.
+    fun checklistDetail(id: Long): StateFlow<ChecklistDetail?> = details.getOrPut(id) {
+        repo.checklistFull(id)
+            .map { it?.toDetail() }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    }
 
     fun addChecklist(name: String) { viewModelScope.launch { repo.addChecklist(name) } }
 
@@ -17,7 +52,7 @@ class ChecklistViewModel(private val repo: Repository) : ViewModel() {
 
     fun addEntry(checklistId: Long, sectionId: Long?, text: String, orderIndex: Int) { viewModelScope.launch { repo.addEntry(checklistId, sectionId, text, orderIndex) } }
 
-    fun toggle(entry: EntryEntity) { viewModelScope.launch { repo.toggleEntry(entry.id, !entry.checked, entry.checklistId, entry.sectionId, entry.text, entry.orderIndex) } }
+    fun toggle(entry: EntryEntity) { viewModelScope.launch { repo.setEntryChecked(entry.id, !entry.checked) } }
 
     fun deleteChecklist(id: Long) {
         viewModelScope.launch { repo.deleteChecklist(id) }

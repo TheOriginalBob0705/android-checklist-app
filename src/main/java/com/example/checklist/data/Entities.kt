@@ -54,19 +54,12 @@ data class EntryEntity(
 )
 
 // Aggregates
-data class SectionWithEntries(
-    @Embedded val section: SectionEntity,
-    @Relation(parentColumn = "id", entityColumn = "sectionId")
-    val entries: List<EntryEntity>
-)
 
+// Entries are read once for the whole checklist and grouped by section in the view model.
 data class ChecklistFull(
     @Embedded val checklist: ChecklistEntity,
-    @Relation(parentColumn = "id", entityColumn = "checklistId", entity = SectionEntity::class)
-    val sections: List<SectionWithEntries>,
-    @Relation(parentColumn = "id", entityColumn = "checklistId", entity = EntryEntity::class)
-    val allEntries: List<EntryEntity>
-) {
-    val ungrouped: List<EntryEntity>
-        get() = allEntries.filter { it.sectionId == null }.sortedBy { it.orderIndex }
-}
+    @Relation(parentColumn = "id", entityColumn = "checklistId")
+    val sections: List<SectionEntity>,
+    @Relation(parentColumn = "id", entityColumn = "checklistId")
+    val entries: List<EntryEntity>
+)
