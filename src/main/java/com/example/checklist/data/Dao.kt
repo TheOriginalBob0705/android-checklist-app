@@ -9,6 +9,17 @@ interface ChecklistDao {
     @Query("SELECT * FROM checklists ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<ChecklistEntity>>
 
+    @Query("""
+        SELECT c.*,
+               COUNT(e.id) AS total,
+               COALESCE(SUM(CASE WHEN e.checked THEN 1 ELSE 0 END), 0) AS done
+        FROM checklists c
+        LEFT JOIN entries e ON e.checklistId = c.id
+        GROUP BY c.id
+        ORDER BY c.createdAt DESC
+    """)
+    fun observeSummaries(): Flow<List<ChecklistSummary>>
+
     @Insert
     suspend fun insert(checklist: ChecklistEntity): Long
 
@@ -30,6 +41,12 @@ interface SectionDao {
     @Update
     suspend fun update(section: SectionEntity)
 
+    @Query("UPDATE sections SET orderIndex = :order WHERE id = :id")
+    suspend fun setOrder(id: Long, order: Int)
+
+    @Query("DELETE FROM sections WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
     @Delete
     suspend fun delete(section: SectionEntity)
 }
@@ -46,8 +63,17 @@ interface EntryDao {
     @Query("UPDATE entries SET checked = :checked WHERE id = :id")
     suspend fun setChecked(id: Long, checked: Boolean)
 
+    @Query("UPDATE entries SET sectionId = :sectionId, orderIndex = :order WHERE id = :id")
+    suspend fun setPlacement(id: Long, sectionId: Long?, order: Int)
+
+    @Query("DELETE FROM entries WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
+    @Insert
+    suspend fun restore(entry: EntryEntity)
+
     @Update
-    suspend fun update(entry: EntryEntity)
+    suspend fun updateEntry(entry: EntryEntity)
 
     @Delete
     suspend fun delete(entry: EntryEntity)

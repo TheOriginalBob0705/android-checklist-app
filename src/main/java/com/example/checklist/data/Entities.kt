@@ -63,3 +63,9 @@ data class ChecklistFull(
     @Relation(parentColumn = "id", entityColumn = "checklistId")
     val entries: List<EntryEntity>
 )
+
+data class ChecklistSummary(
+    @Embedded val checklist: ChecklistEntity,
+    val total: Int,
+    val done: Int
+)

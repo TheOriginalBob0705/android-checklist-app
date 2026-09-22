@@ -1,17 +1,22 @@
 package com.example.checklist.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.example.checklist.R
 import com.example.checklist.data.ChecklistEntity
+import com.example.checklist.data.ChecklistSummary
+import com.example.checklist.ui.screens.components.EmptyState
 import com.example.checklist.ui.screens.components.TextFieldDialog
 import com.example.checklist.viewmodel.ChecklistViewModel
 import java.text.DateFormat
@@ -23,26 +28,36 @@ fun ChecklistListScreen(
     onOpen: (Long) -> Unit,
     vm: ChecklistViewModel
 ) {
-    val lists by vm.checklists.collectAsState()
+    val lists by vm.summaries.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
-    var deleteTarget by remember {mutableStateOf<ChecklistEntity?>(null) }
-
+    var deleteTarget by remember { mutableStateOf<ChecklistEntity?>(null) }
     var editChecklist by remember { mutableStateOf<ChecklistEntity?>(null) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.checklists_title)) }) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true }) { Text(stringResource(R.string.action_add)) }
+            FloatingActionButton(onClick = { showDialog = true }) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_checklist))
+            }
         }
     ) { padding ->
-        LazyColumn(contentPadding = padding) {
-            items(lists, key = { it.id }) { item ->
-                ChecklistRow(
-                    item = item,
-                    onOpen = onOpen,
-                    onDeleteRequest = { deleteTarget = item },
-                    onEditRequest = { editChecklist = item }
+        if (lists.isEmpty()) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                EmptyState(
+                    title = stringResource(R.string.empty_checklists_title),
+                    body = stringResource(R.string.empty_checklists_body)
                 )
+            }
+        } else {
+            LazyColumn(contentPadding = padding) {
+                items(lists, key = { it.checklist.id }) { item ->
+                    ChecklistRow(
+                        item = item,
+                        onOpen = onOpen,
+                        onDeleteRequest = { deleteTarget = item.checklist },
+                        onEditRequest = { editChecklist = item.checklist }
+                    )
+                }
             }
         }
     }
@@ -92,24 +107,37 @@ fun ChecklistListScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ChecklistRow(
-    item: ChecklistEntity,
+    item: ChecklistSummary,
     onOpen: (Long) -> Unit,
     onDeleteRequest: () -> Unit,
-    onEditRequest: () -> Unit) {
+    onEditRequest: () -> Unit
+) {
     ListItem(
         headlineContent = {
             Text(
-                item.name,
+                item.checklist.name,
                 modifier = Modifier.clickable { onEditRequest() }
             )
         },
         supportingContent = {
-            val createdText = DateFormat.getDateInstance().format(Date(item.createdAt))
-            Text(stringResource(R.string.created_on, createdText)) },
+            Column {
+                val createdText = DateFormat.getDateInstance().format(Date(item.checklist.createdAt))
+                Text(stringResource(R.string.created_on, createdText))
+                if (item.total > 0) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(stringResource(R.string.progress_count, item.done, item.total))
+                    Spacer(Modifier.height(4.dp))
+                    LinearProgressIndicator(
+                        progress = { item.done.toFloat() / item.total },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        },
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = { onOpen(item.id) },
+                onClick = { onOpen(item.checklist.id) },
                 onLongClick = { onDeleteRequest() }
             )
     )
