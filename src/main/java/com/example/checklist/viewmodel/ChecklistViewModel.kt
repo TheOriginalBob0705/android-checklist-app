@@ -2,6 +2,7 @@ package com.example.checklist.viewmodel
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.checklist.data.*
 import kotlinx.coroutines.Dispatchers
@@ -43,7 +44,7 @@ class ChecklistViewModel(private val repo: Repository) : ViewModel() {
         repo.checklistFull(id)
             .map { it?.toDetail() }
             .flowOn(Dispatchers.Default)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+            .stateIn(viewModelScope, detailSharing, null)
     }
 
     fun addChecklist(name: String) { viewModelScope.launch { repo.addChecklist(name) } }
@@ -69,5 +70,20 @@ class ChecklistViewModel(private val repo: Repository) : ViewModel() {
 
     fun renameEntry(entry: EntryEntity, newText: String) {
         viewModelScope.launch { repo.updateEntry(entry.copy(text = newText)) }
+    }
+
+    companion object {
+        // Survives a rotation, then drops the cached rows so visited checklists don't accumulate.
+        private val detailSharing = SharingStarted.WhileSubscribed(
+            stopTimeoutMillis = 5_000,
+            replayExpirationMillis = 30_000
+        )
+
+        fun factory(db: AppDatabase) = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return ChecklistViewModel(Repository(db)) as T
+            }
+        }
     }
 }
